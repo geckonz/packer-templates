@@ -1,25 +1,14 @@
-if test -f .vbox_version ; then
-  # The netboot installs the VirtualBox support (old) so we have to remove it
-  if test -f /etc/init.d/virtualbox-ose-guest-utils ; then
-    /etc/init.d/virtualbox-ose-guest-utils stop
-  fi
+#!/bin/sh
+export DEBIAN_FRONTEND=noninteractive
 
-  rmmod vboxguest
-  aptitude -y purge virtualbox-ose-guest-x11 virtualbox-ose-guest-dkms virtualbox-ose-guest-utils
+echo "installing virtualbox guest additions"
+sed -i 's/main$/main contrib/' /etc/apt/sources.list
+apt-get update
 
-  # Install dkms for dynamic compiles
+# install virtualbox additions build dependancies
+apt-get --yes install --no-install-recommends linux-headers-amd64 virtualbox-guest-dkms
 
-  apt-get install -y dkms
-
-  # If libdbus is not installed, virtualbox will not autostart
-  apt-get -y install --no-install-recommends libdbus-1-3
-
-  # Install the VirtualBox guest additions
-  mount -o loop VBoxGuestAdditions.iso /mnt
-  yes|sh /mnt/VBoxLinuxAdditions.run
-  umount /mnt
-  rm -f VBoxLinuxAdditions.iso
-
-  # Start the newly build driver
-  /etc/init.d/vboxadd start
-fi
+# cleanup virtualbox stuff
+apt-get --yes remove linux-headers-amd64
+apt-get --yes autoremove
+apt-get --yes clean
